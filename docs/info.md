@@ -25,8 +25,9 @@ porches, the sync pulses and the vertical regions are counted the same way.
 Each instruction also carries the horizontal sync, vertical sync and
 "video on" bits, which go straight to the monitor. The pebble counts that
 are currently being filled are the pixel's column and row, and they look up
-the colour: Boris (stored as ASCII art in `src/boris.v`), the lettering (a
-font stored as ASCII art in `src/font.v`) and the demonstration.
+the colour: Boris (stored as ASCII art in `src/boris.v`) and the
+demonstration, whose text uses a small font stored as ASCII art in
+`src/font.v`.
 
 **The demonstration.** The same machine also runs a second program you can
 watch: Minsky-style multiplication, from `src/demo_program.v`. Once every

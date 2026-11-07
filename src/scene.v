@@ -9,11 +9,6 @@
  *   y 112..255   left:  the demo program's five boxes, a..e, with their pebbles
  *                right: the demo program's listing, with ">" at the running line
  *   y 304..431   Boris (24 x 32 sprite pixels, each 4 x 4 monitor pixels)
- *   y 336..367   "beagleboard.org", coloured like the logo
- *
- * Text comes in two sizes from one font: big letters (each font pixel
- * 2 x 4 machine pixels, letters 16 apart) and small letters (each font
- * pixel 1 x 2, letters 8 apart).
  */
 
 `default_nettype none
@@ -97,65 +92,55 @@ module scene (
       .if_empty(line_if_empty)
   );
 
-  localparam [8*4-1:0] TAKE_WORD = "take";
-  localparam [8*4-1:0] ADD_WORD  = "add ";
+  // Letter numbers in the font (see font.v): digits are themselves.
+  localparam [4:0] COLON = 5'd10, ARROW = 5'd11, LETTER_A = 5'd12, LETTER_D = 5'd15,
+                   LETTER_E = 5'd16, LETTER_K = 5'd17, LETTER_T = 5'd18, BLANK = 5'd31;
 
-  reg [7:0] listing_char;
+  reg [4:0] listing_letter;
   always @(*) begin
     case (listing_col)
-      4'd0:    listing_char = running_line ? ">" : " ";
-      4'd1:    listing_char = "0" + {4'b0, listing_line};
-      4'd2:    listing_char = ":";
-      4'd4, 4'd5, 4'd6, 4'd7:
-               listing_char = line_is_take ? TAKE_WORD[8*(7 - listing_col) +: 8]
-                                           : ADD_WORD[8*(7 - listing_col) +: 8];
-      4'd9:    listing_char = "a" + {5'b0, line_box};
-      4'd11:   listing_char = "0" + {4'b0, line_next};
-      4'd13:   listing_char = line_is_take ? "0" + {4'b0, line_if_empty} : " ";
-      default: listing_char = " ";
+      4'd0:    listing_letter = running_line ? ARROW : BLANK;
+      4'd1:    listing_letter = {1'b0, listing_line};
+      4'd2:    listing_letter = COLON;
+      // "take" or "add "
+      4'd4:    listing_letter = line_is_take ? LETTER_T : LETTER_A;
+      4'd5:    listing_letter = line_is_take ? LETTER_A : LETTER_D;
+      4'd6:    listing_letter = line_is_take ? LETTER_K : LETTER_D;
+      4'd7:    listing_letter = line_is_take ? LETTER_E : BLANK;
+      4'd9:    listing_letter = LETTER_A + {2'b0, line_box};
+      4'd11:   listing_letter = {1'b0, line_next};
+      4'd13:   listing_letter = line_is_take ? {1'b0, line_if_empty} : BLANK;
+      default: listing_letter = BLANK;
     endcase
   end
 
   // ---------------------------------------------------------------------
   // All the text, through one font
   // ---------------------------------------------------------------------
-  localparam [8*15-1:0] LOGO    = "beagleboard.org";
-
-  wire [4:0] big_cell   = x[8:4];        // big letters: 16 machine pixels apart
-
-  reg  [7:0] char;
-  reg  [2:0] font_row, font_col;
+  // Letters are 6 x 8 font pixels in an 8-machine-pixel cell; each font
+  // pixel is 1 machine pixel wide and 2 lines tall.
+  reg  [4:0] letter;
   reg  [5:0] text_colour;
   wire       ink;
+  wire       in_cup_label = (y >= 9'd240) && (y < 9'd256) && in_cup_cols && (across[4:3] == 2'd1);
 
   always @(*) begin
-    char        = " ";
-    font_row    = 3'd0;
-    font_col    = x[2:0];                // small letters
+    letter      = BLANK;
     text_colour = LIGHT_GRAY;
-
-    if (in_listing) begin                                   // listing, small
-      font_row    = y[3:1];
-      char        = listing_char;
+    if (in_listing) begin
+      letter      = listing_letter;
       text_colour = running_line ? (listing_col == 4'd0 ? TONGUE_ORANGE : WHITE) : LIGHT_GRAY;
-    end else if (y >= 9'd240 && y < 9'd256 && in_cup_cols && across[4:3] == 2'd1) begin
-      font_row    = y[3:1];                                          // cup labels a..e
-      char        = "a" + {5'b0, cup};
+    end else if (in_cup_label) begin                   // box names a..e under the cups
+      letter      = LETTER_A + {2'b0, cup};
       text_colour = WHITE;
-    end else if (y >= 9'd336 && y < 9'd368) begin                    // logo text, big
-      font_row    = y[4:2] - 3'd4;
-      font_col    = x[3:1];
-      text_colour = (big_cell < 5'd11) ? HAIR_BROWN : TONGUE_ORANGE; // "beagle" + "board.org"
-      if (big_cell >= 5'd5)
-        char = LOGO[8*(14 - (big_cell - 5'd5)) +: 8];
     end
   end
 
   font letters (
-      .char(char),
-      .row (font_row),
-      .col (font_col),
-      .ink (ink)
+      .letter(letter),
+      .row   (y[3:1]),
+      .col   (x[2:0]),
+      .ink   (ink)
   );
 
   // ---------------------------------------------------------------------

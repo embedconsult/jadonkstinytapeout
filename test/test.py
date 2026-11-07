@@ -3,7 +3,7 @@
 #
 # Tests for "Boris and the Minsky Machine": the ADD/TAKE machine must
 # produce exact 640x480 VGA timing, and the picture must have Boris, the
-# lettering, the program listing and the pebbles in the right places and
+# program listing and the pebbles in the right places and
 # colours, showing the demo program's first instruction taking effect.
 #
 # To keep the tests fast (they also run on the gate-level netlist), they
@@ -93,8 +93,6 @@ async def test_picture(dut):
         (76, 215, (2, 3, 1), "box a still has its pebbles"),
         (82, 244, (3, 3, 3), "white label under box a"),
         (64, 304, (0, 0, 0), "Boris' black outline"),
-        (160, 336, (2, 1, 0), "'beagle' in hair brown"),
-        (500, 336, (3, 1, 0), "'board.org' in tongue orange"),
         (116, 360, (3, 1, 0), "Boris' orange tongue"),
         (56, 380, (3, 3, 3), "Boris' white fur"),
         (600, 470, (0, 2, 3), "BeagleBoard blue background"),
