@@ -6,12 +6,10 @@
  * power of two, so finding a sprite or letter pixel needs only shifts and
  * small subtractions, never a divider.
  *
- *   y  16.. 47   "minsky machine"
- *   y  96..255   left:  the demo program's five boxes, a..e, with their pebbles
+ *   y 112..255   left:  the demo program's five boxes, a..e, with their pebbles
  *                right: the demo program's listing, with ">" at the running line
- *   y 264..435   Boris
+ *   y 304..431   Boris (24 x 32 sprite pixels, each 4 x 4 monitor pixels)
  *   y 336..367   "beagleboard.org", coloured like the logo
- *   y 448..463   "all of this is drawn by add and take"
  *
  * Text comes in two sizes from one font: big letters (each font pixel
  * 2 x 4 machine pixels, letters 16 apart) and small letters (each font
@@ -32,18 +30,17 @@ module scene (
   localparam [5:0] BEAGLE_BLUE   = 6'b00_10_11;  // #23B0E6
   localparam [5:0] TONGUE_ORANGE = 6'b11_01_00;  // #F26935
   localparam [5:0] HAIR_BROWN    = 6'b10_01_00;  // #AB833C
-  localparam [5:0] DARK_BROWN    = 6'b01_00_00;  // #8C6A39 (nearest brown at 2 bits)
   localparam [5:0] CHECK_GREEN   = 6'b10_11_01;  // #8EC969
   localparam [5:0] LIGHT_GRAY    = 6'b10_10_10;  // #CBCCCE
   localparam [5:0] WHITE         = 6'b11_11_11;
   localparam [5:0] BLACK         = 6'b00_00_00;
 
   // ---------------------------------------------------------------------
-  // Boris: 32 x 43 sprite, each sprite pixel 2 x 4 machine pixels
+  // Boris: 24 x 32 sprite, each sprite pixel 2 x 4 machine pixels
   // ---------------------------------------------------------------------
-  wire       in_boris = (x >= 9'd8) && (x < 9'd72) && (y >= 9'd264) && (y < 9'd436);
-  wire [7:0] boris_col_wide = x[8:1] - 8'd4;
-  wire [6:0] boris_row_wide = y[8:2] - 7'd66;
+  wire       in_boris = (x >= 9'd16) && (x < 9'd64) && (y >= 9'd304) && (y < 9'd432);
+  wire [7:0] boris_col_wide = x[8:1] - 8'd8;
+  wire [6:0] boris_row_wide = y[8:2] - 7'd76;
   wire [2:0] boris_colour;
 
   boris boris_sprite (
@@ -122,14 +119,9 @@ module scene (
   // ---------------------------------------------------------------------
   // All the text, through one font
   // ---------------------------------------------------------------------
-  localparam [8*14-1:0] TITLE   = "minsky machine";
   localparam [8*15-1:0] LOGO    = "beagleboard.org";
-  localparam [8*5-1:0]  BOXES   = "boxes";
-  localparam [8*7-1:0]  PROGRAM = "program";
-  localparam [8*36-1:0] TAGLINE = "all of this is drawn by add and take";
 
   wire [4:0] big_cell   = x[8:4];        // big letters: 16 machine pixels apart
-  wire [5:0] small_cell = x[8:3];        // small letters: 8 apart
 
   reg  [7:0] char;
   reg  [2:0] font_row, font_col;
@@ -142,19 +134,7 @@ module scene (
     font_col    = x[2:0];                // small letters
     text_colour = LIGHT_GRAY;
 
-    if (y >= 9'd16 && y < 9'd48) begin                               // title, big
-      font_row    = y[4:2] - 3'd4;
-      font_col    = x[3:1];
-      text_colour = WHITE;
-      if (big_cell >= 5'd3 && big_cell < 5'd17)
-        char = TITLE[8*(13 - (big_cell - 5'd3)) +: 8];
-    end else if (y >= 9'd96 && y < 9'd112) begin                     // headings, small
-      font_row = y[3:1];
-      if (small_cell >= 6'd4 && small_cell < 6'd9)
-        char = BOXES[8*(4 - (small_cell - 6'd4)) +: 8];
-      else if (small_cell >= 6'd25 && small_cell < 6'd32)
-        char = PROGRAM[8*(6 - (small_cell - 6'd25)) +: 8];
-    end else if (in_listing) begin                                   // listing, small
+    if (in_listing) begin                                   // listing, small
       font_row    = y[3:1];
       char        = listing_char;
       text_colour = running_line ? (listing_col == 4'd0 ? TONGUE_ORANGE : WHITE) : LIGHT_GRAY;
@@ -168,10 +148,6 @@ module scene (
       text_colour = (big_cell < 5'd11) ? HAIR_BROWN : TONGUE_ORANGE; // "beagle" + "board.org"
       if (big_cell >= 5'd5)
         char = LOGO[8*(14 - (big_cell - 5'd5)) +: 8];
-    end else if (y >= 9'd448 && y < 9'd464) begin                    // tagline, small
-      font_row = y[3:1];
-      if (small_cell >= 6'd2 && small_cell < 6'd38)
-        char = TAGLINE[8*(35 - (small_cell - 6'd2)) +: 8];
     end
   end
 
@@ -191,7 +167,6 @@ module scene (
         3'd1:    rgb = BLACK;
         3'd2:    rgb = WHITE;
         3'd3:    rgb = HAIR_BROWN;
-        3'd4:    rgb = DARK_BROWN;
         default: rgb = TONGUE_ORANGE;
       endcase
     end else if (ink)

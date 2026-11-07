@@ -86,14 +86,16 @@ module minsky_vga (
   // A box only needs enough bits for the most pebbles it ever holds.
   function integer box_bits(input integer box);
     case (box)
-      0, 1, 8, 9, 16: box_bits = 9;   // up to 320 or 479 pebbles, and the frame count
+      0, 1, 8, 9:     box_bits = 9;   // up to 320 or 479 pebbles
+      16:             box_bits = 4;   // frame count: only "every 16th frame" matters
       2, 3:           box_bits = 3;   // up to 6
       4, 5:           box_bits = 6;   // up to 48
       6, 7:           box_bits = 5;   // up to 23
       10, 11:         box_bits = 4;   // up to 9
       12, 13:         box_bits = 1;   // up to 1
       14, 15:         box_bits = 6;   // up to 32
-      default:        box_bits = 4;   // demo boxes: up to 12
+      19:             box_bits = 4;   // demo box c: up to 12
+      default:        box_bits = 3;   // demo boxes a, b, d, e: up to 4
     endcase
   endfunction
 

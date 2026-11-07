@@ -87,15 +87,16 @@ async def test_picture(dut):
     elapsed = 0
 
     expected = [  # (x, y, colour, what)
-        (136, 16, (3, 3, 3), "white title lettering"),
         (402, 115, (0, 2, 3), "no arrow on line 0 any more"),
         (402, 131, (3, 1, 0), "orange arrow: the demo program is now on line 1"),
         (156, 198, (0, 2, 3), "box b lost a pebble: line 0 was 'take b'"),
         (76, 215, (2, 3, 1), "box a still has its pebbles"),
+        (82, 244, (3, 3, 3), "white label under box a"),
+        (64, 304, (0, 0, 0), "Boris' black outline"),
         (160, 336, (2, 1, 0), "'beagle' in hair brown"),
-        (128, 340, (3, 1, 0), "Boris' orange tongue"),
         (500, 336, (3, 1, 0), "'board.org' in tongue orange"),
-        (50, 448, (2, 2, 2), "tagline lettering"),
+        (116, 360, (3, 1, 0), "Boris' orange tongue"),
+        (56, 380, (3, 3, 3), "Boris' white fur"),
         (600, 470, (0, 2, 3), "BeagleBoard blue background"),
     ]
     for x, y, rgb, what in sorted(expected, key=lambda p: (p[1], p[0])):
