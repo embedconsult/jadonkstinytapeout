@@ -3,7 +3,7 @@ project:
   title:        "Minsky Machine (bbb.io/minsky)"      # Project title
   author:       "jadonk"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "A two-instruction (add/take) Minsky machine generates VGA and runs a multiply program you can watch"      # One line description of what your project does
+  description:  "A two-instruction (add/take) Minsky machine runs a multiply program you can watch on VGA"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     25175000       # Clock frequency in Hz (or 0 if not applicable)
 
@@ -18,7 +18,8 @@ project:
   # Don't forget to also update `PROJECT_SOURCES` in test/Makefile.
   source_files:
     - "project.v"
-    - "minsky_vga.v"
+    - "vga_sync.v"
+    - "minsky_machine.v"
     - "demo_program.v"
     - "scene.v"
     - "font.v"

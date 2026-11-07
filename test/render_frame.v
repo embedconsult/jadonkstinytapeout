@@ -69,8 +69,8 @@ module render_frame;
       for (line = 0; line < FRAME_LINES; line = line + 1) begin
         for (col = 0; col < LINE_CLOCKS; col = col + 1) begin
           #1;  // sample just after the clock edge
-          // Expected timing: hsync low for clocks 654..750, vsync low on lines 490..491.
-          if (hsync_n !== !(col >= 654 && col < 751)) begin
+          // Expected timing: hsync low for clocks 656..751, vsync low on lines 490..491.
+          if (hsync_n !== !(col >= 656 && col < 752)) begin
             if (errors < 5) $display("hsync wrong: frame %0d line %0d clock %0d", frame, line, col);
             errors = errors + 1;
           end

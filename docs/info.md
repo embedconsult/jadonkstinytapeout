@@ -13,31 +13,22 @@ anything at all: a few boxes that hold pebbles, and two instructions.
 - **take *r*** takes one pebble out of box *r* and goes on to the next
   instruction, but if box *r* is empty it jumps somewhere else instead.
 
-This chip is such a machine, and it draws the whole VGA picture with only
-those two instructions. It runs one instruction per clock (25.175 MHz).
+This chip contains such a machine and shows it working on a VGA monitor.
 
-**Drawing the screen.** Every pixel is one trip around a two-instruction
-loop, `take` from one box and `add` to another, so each pixel is two clocks
-wide (320 x 480 distinct pixels on a 640 x 480 screen). Minsky's machine has
-no "load a number" instruction, so the boxes work in pairs: one line moves
-320 pebbles from box A to box B, and the next line moves them back. The
-porches, the sync pulses and the vertical regions are counted the same way.
-Each instruction also carries the horizontal sync, vertical sync and
-"video on" bits, which go straight to the monitor. The pebble counts that
-are currently being filled are the pixel's column and row, and they look up
-the colour of the demonstration and of the link at the bottom; all the
+**The machine.** Five boxes, a to e, and a program counter, in
+`src/minsky_machine.v`. It runs the program in `src/demo_program.v`:
+Minsky-style multiplication. It multiplies a = 3 by b = 4 into c
+(12 pebbles), puts a and b back, empties c and starts again, every 99
+instructions. It runs one instruction every 16 frames (about four a
+second), slowly enough to watch: a full cycle takes about 26 seconds.
+
+**The screen.** The left of the screen shows the five boxes with their
+real pebbles; the right shows the program, with an orange `>` at the
+instruction being run. The listing is drawn from the same table the
+machine executes. Each line reads: line number, instruction, box, next
+line, and (for `take`) the line to go to if the box is empty. The picture
+is 640 x 480 at 60 Hz, from standard VGA timing (`src/vga_sync.v`); the
 text uses a small font stored as ASCII art in `src/font.v`.
-
-**The demonstration.** The same machine also runs a second program you can
-watch: Minsky-style multiplication, from `src/demo_program.v`. Once every
-16 frames, a spare instruction slot in the vertical blanking runs one of
-its instructions. The left of the screen shows its five boxes, a to e, with
-their real pebbles; the right shows its program, with an orange `>` at the
-instruction being run. The listing is drawn from the same table the machine
-executes. Each line reads: line number, instruction, box, next line, and
-(for `take`) the line to go to if the box is empty. It multiplies a = 3 by
-b = 4 into c (12 pebbles), puts a and b back, empties c and starts again,
-every 99 instructions (about 26 seconds).
 
 The colours are the BeagleBoard.org brand colours, as close as 2 bits per
 channel allows; the link bbb.io/minsky is in hair brown and tongue orange,

@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: © 2024 Tiny Tapeout
 # SPDX-License-Identifier: Apache-2.0
 #
-# Tests for the Minsky Machine: the ADD/TAKE machine must produce exact
-# 640x480 VGA timing, and the picture must have the program listing, the
-# pebbles and the bbb.io/minsky link in the right places and
+# Tests for the Minsky Machine: exact 640x480 VGA timing, and a picture
+# with the counting machine's program listing, its pebbles and the
+# bbb.io/minsky link in the right places and
 # colours, showing the demo program's first instruction taking effect.
 #
 # To keep the tests fast (they also run on the gate-level netlist), they
@@ -53,13 +53,13 @@ async def clocks_until(dut, edge):
 
 @cocotb.test()
 async def test_horizontal_timing(dut):
-    """Every line is 800 clocks with a 97-clock sync pulse."""
+    """Every line is 800 clocks with a 96-clock sync pulse."""
     await start(dut)
     await FallingEdge(dut.hsync_n)
     for _ in range(3):
         low = await clocks_until(dut, RisingEdge(dut.hsync_n))
         high = await clocks_until(dut, FallingEdge(dut.hsync_n))
-        assert low == 97, f"hsync pulse is {low} clocks"
+        assert low == 96, f"hsync pulse is {low} clocks"
         assert low + high == LINE_CLOCKS, f"line is {low + high} clocks"
 
 
