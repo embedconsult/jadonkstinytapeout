@@ -1,14 +1,13 @@
 /*
- * Boris and the Minsky Machine
+ * Minsky Machine (bbb.io/minsky)
  *
- * A two-instruction computer (Minsky's ADD and TAKE) draws a VGA picture
- * of Boris, the BeagleBoard.org beagle, together with a live demonstration
- * of Minsky's "boxes of pebbles".
+ * A two-instruction computer (Minsky's ADD and TAKE) generates a VGA
+ * picture: a live demonstration of Minsky's "boxes of pebbles", running on
+ * the same machine, and the link bbb.io/minsky in BeagleBoard.org colours.
  *
  *   minsky_vga.v     the ADD/TAKE machine; its main program generates the VGA timing
  *   demo_program.v   the second program it runs, slowly, for you to watch: multiplication
  *   scene.v          what colour each pixel is
- *   boris.v          Boris as ASCII art
  *   font.v           a small font as ASCII art
  *
  * Output pins follow the Tiny VGA Pmod:

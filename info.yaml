@@ -1,9 +1,9 @@
 # Tiny Tapeout project information
 project:
-  title:        "Boris and the Minsky Machine"      # Project title
+  title:        "Minsky Machine (bbb.io/minsky)"      # Project title
   author:       "jadonk"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "A two-instruction (add/take) Minsky machine draws Boris the beagle on VGA and runs a visible multiply program"      # One line description of what your project does
+  description:  "A two-instruction (add/take) Minsky machine generates VGA and runs a multiply program you can watch"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     25175000       # Clock frequency in Hz (or 0 if not applicable)
 
@@ -21,7 +21,6 @@ project:
     - "minsky_vga.v"
     - "demo_program.v"
     - "scene.v"
-    - "boris.v"
     - "font.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.

@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: © 2024 Tiny Tapeout
 # SPDX-License-Identifier: Apache-2.0
 #
-# Tests for "Boris and the Minsky Machine": the ADD/TAKE machine must
-# produce exact 640x480 VGA timing, and the picture must have Boris, the
-# program listing and the pebbles in the right places and
+# Tests for the Minsky Machine: the ADD/TAKE machine must produce exact
+# 640x480 VGA timing, and the picture must have the program listing, the
+# pebbles and the bbb.io/minsky link in the right places and
 # colours, showing the demo program's first instruction taking effect.
 #
 # To keep the tests fast (they also run on the gate-level netlist), they
@@ -92,9 +92,8 @@ async def test_picture(dut):
         (156, 198, (0, 2, 3), "box b lost a pebble: line 0 was 'take b'"),
         (76, 215, (2, 3, 1), "box a still has its pebbles"),
         (82, 244, (3, 3, 3), "white label under box a"),
-        (71, 288, (0, 0, 0), "Boris' black outline"),
-        (135, 352, (3, 1, 0), "Boris' orange tongue"),
-        (79, 400, (3, 3, 3), "Boris' white fur"),
+        (96, 352, (2, 1, 0), "'bbb.io' in hair brown"),
+        (307, 352, (3, 1, 0), "'/minsky' in tongue orange"),
         (600, 470, (0, 2, 3), "BeagleBoard blue background"),
     ]
     for x, y, rgb, what in sorted(expected, key=lambda p: (p[1], p[0])):

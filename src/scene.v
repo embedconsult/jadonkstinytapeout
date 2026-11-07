@@ -8,7 +8,7 @@
  *
  *   y 112..255   left:  the demo program's five boxes, a..e, with their pebbles
  *                right: the demo program's listing, with ">" at the running line
- *   y 288..455   Boris (16 x 21 sprite pixels, each 8 x 8 monitor pixels)
+ *   y 352..383   "bbb.io/minsky" in BeagleBoard.org colours, big letters
  */
 
 `default_nettype none
@@ -28,21 +28,6 @@ module scene (
   localparam [5:0] CHECK_GREEN   = 6'b10_11_01;  // #8EC969
   localparam [5:0] LIGHT_GRAY    = 6'b10_10_10;  // #CBCCCE
   localparam [5:0] WHITE         = 6'b11_11_11;
-  localparam [5:0] BLACK         = 6'b00_00_00;
-
-  // ---------------------------------------------------------------------
-  // Boris: 16 x 21 sprite, each sprite pixel 4 x 8 machine pixels
-  // ---------------------------------------------------------------------
-  wire       in_boris = (x >= 9'd16) && (x < 9'd80) && (y >= 9'd288) && (y < 9'd456);
-  wire [6:0] boris_col_wide = x[8:2] - 7'd4;
-  wire [5:0] boris_row_wide = y[8:3] - 6'd36;
-  wire [2:0] boris_colour;
-
-  boris boris_sprite (
-      .row   (boris_row_wide[4:0]),
-      .col   (boris_col_wide[3:0]),
-      .colour(boris_colour)
-  );
 
   // ---------------------------------------------------------------------
   // The five boxes (drawn as cups), a..e, 32 machine pixels apart from x = 32
@@ -93,8 +78,11 @@ module scene (
   );
 
   // Letter numbers in the font (see font.v): digits are themselves.
-  localparam [4:0] COLON = 5'd10, ARROW = 5'd11, LETTER_A = 5'd12, LETTER_D = 5'd15,
-                   LETTER_E = 5'd16, LETTER_K = 5'd17, LETTER_T = 5'd18, BLANK = 5'd31;
+  localparam [4:0] COLON = 5'd10, ARROW = 5'd11, LETTER_A = 5'd12, LETTER_B = 5'd13,
+                   LETTER_D = 5'd15, LETTER_E = 5'd16, LETTER_K = 5'd17, LETTER_T = 5'd18,
+                   LETTER_I = 5'd19, LETTER_O = 5'd20, DOT = 5'd21, SLASH = 5'd22,
+                   LETTER_M = 5'd23, LETTER_N = 5'd24, LETTER_S = 5'd25, LETTER_Y = 5'd26,
+                   BLANK = 5'd31;
 
   reg [4:0] listing_letter;
   always @(*) begin
@@ -115,19 +103,52 @@ module scene (
   end
 
   // ---------------------------------------------------------------------
+  // "bbb.io/minsky", in big letters
+  // ---------------------------------------------------------------------
+  // 13 letters, 16 machine pixels apart, from x = 48 (letter cells 3..15)
+  wire       in_link     = (y >= 9'd352) && (y < 9'd384) && (x >= 9'd48) && (x < 9'd256);
+  wire [4:0] link_index  = x[8:4] - 5'd3;           // 0..12
+
+  reg [4:0] link_letter;
+  always @(*) begin
+    case (link_index)
+      5'd0, 5'd1, 5'd2: link_letter = LETTER_B;    // b b b
+      5'd3:    link_letter = DOT;                  // .
+      5'd4:    link_letter = LETTER_I;             // i
+      5'd5:    link_letter = LETTER_O;             // o
+      5'd6:    link_letter = SLASH;                // /
+      5'd7:    link_letter = LETTER_M;             // m
+      5'd8:    link_letter = LETTER_I;             // i
+      5'd9:    link_letter = LETTER_N;             // n
+      5'd10:   link_letter = LETTER_S;             // s
+      5'd11:   link_letter = LETTER_K;             // k
+      5'd12:   link_letter = LETTER_Y;             // y
+      default: link_letter = BLANK;
+    endcase
+  end
+
+  // ---------------------------------------------------------------------
   // All the text, through one font
   // ---------------------------------------------------------------------
-  // Letters are 6 x 8 font pixels in an 8-machine-pixel cell; each font
-  // pixel is 1 machine pixel wide and 2 lines tall.
+  // Letters are 6 x 8 font pixels. Small letters: each font pixel is
+  // 1 machine pixel wide and 2 lines tall. Big letters: 2 wide, 4 tall.
   reg  [4:0] letter;
+  reg  [2:0] font_row, font_col;
   reg  [5:0] text_colour;
   wire       ink;
   wire       in_cup_label = (y >= 9'd240) && (y < 9'd256) && in_cup_cols && (across[4:3] == 2'd1);
 
   always @(*) begin
     letter      = BLANK;
+    font_row    = y[3:1];                          // small letters
+    font_col    = x[2:0];
     text_colour = LIGHT_GRAY;
-    if (in_listing) begin
+    if (in_link) begin
+      letter      = link_letter;
+      font_row    = y[4:2];                        // big letters
+      font_col    = x[3:1];
+      text_colour = (link_index < 5'd6) ? HAIR_BROWN : TONGUE_ORANGE;  // "bbb.io" + "/minsky"
+    end else if (in_listing) begin
       letter      = listing_letter;
       text_colour = running_line ? (listing_col == 4'd0 ? TONGUE_ORANGE : WHITE) : LIGHT_GRAY;
     end else if (in_cup_label) begin                   // box names a..e under the cups
@@ -138,8 +159,8 @@ module scene (
 
   font letters (
       .letter(letter),
-      .row   (y[3:1]),
-      .col   (x[2:0]),
+      .row   (font_row),
+      .col   (font_col),
       .ink   (ink)
   );
 
@@ -147,14 +168,7 @@ module scene (
   // Painting, front to back
   // ---------------------------------------------------------------------
   always @(*) begin
-    if (in_boris && boris_colour != 3'd0) begin
-      case (boris_colour)
-        3'd1:    rgb = BLACK;
-        3'd2:    rgb = WHITE;
-        3'd3:    rgb = HAIR_BROWN;
-        default: rgb = TONGUE_ORANGE;
-      endcase
-    end else if (ink)
+    if (ink)
       rgb = text_colour;
     else if (pebble)
       rgb = CHECK_GREEN;

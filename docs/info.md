@@ -4,7 +4,7 @@ This file is used to generate your project datasheet.
 
 ## How it works
 
-![Boris and the Minsky Machine](boris_minsky.png)
+![Minsky Machine](minsky_machine.png)
 
 In 1967 Marvin Minsky showed that a computer needs very little to compute
 anything at all: a few boxes that hold pebbles, and two instructions.
@@ -25,9 +25,8 @@ porches, the sync pulses and the vertical regions are counted the same way.
 Each instruction also carries the horizontal sync, vertical sync and
 "video on" bits, which go straight to the monitor. The pebble counts that
 are currently being filled are the pixel's column and row, and they look up
-the colour: Boris (stored as ASCII art in `src/boris.v`) and the
-demonstration, whose text uses a small font stored as ASCII art in
-`src/font.v`.
+the colour of the demonstration and of the link at the bottom; all the
+text uses a small font stored as ASCII art in `src/font.v`.
 
 **The demonstration.** The same machine also runs a second program you can
 watch: Minsky-style multiplication, from `src/demo_program.v`. Once every
@@ -41,7 +40,8 @@ b = 4 into c (12 pebbles), puts a and b back, empties c and starts again,
 every 99 instructions (about 26 seconds).
 
 The colours are the BeagleBoard.org brand colours, as close as 2 bits per
-channel allows.
+channel allows; the link bbb.io/minsky is in hair brown and tongue orange,
+like the BeagleBoard.org logo.
 
 ## How to test
 
