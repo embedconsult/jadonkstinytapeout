@@ -8,7 +8,7 @@
  *
  *   y 112..255   left:  the demo program's five boxes, a..e, with their pebbles
  *                right: the demo program's listing, with ">" at the running line
- *   y 304..431   Boris (24 x 32 sprite pixels, each 4 x 4 monitor pixels)
+ *   y 288..455   Boris (16 x 21 sprite pixels, each 8 x 8 monitor pixels)
  */
 
 `default_nettype none
@@ -31,16 +31,16 @@ module scene (
   localparam [5:0] BLACK         = 6'b00_00_00;
 
   // ---------------------------------------------------------------------
-  // Boris: 24 x 32 sprite, each sprite pixel 2 x 4 machine pixels
+  // Boris: 16 x 21 sprite, each sprite pixel 4 x 8 machine pixels
   // ---------------------------------------------------------------------
-  wire       in_boris = (x >= 9'd16) && (x < 9'd64) && (y >= 9'd304) && (y < 9'd432);
-  wire [7:0] boris_col_wide = x[8:1] - 8'd8;
-  wire [6:0] boris_row_wide = y[8:2] - 7'd76;
+  wire       in_boris = (x >= 9'd16) && (x < 9'd80) && (y >= 9'd288) && (y < 9'd456);
+  wire [6:0] boris_col_wide = x[8:2] - 7'd4;
+  wire [5:0] boris_row_wide = y[8:3] - 6'd36;
   wire [2:0] boris_colour;
 
   boris boris_sprite (
-      .row   (boris_row_wide[5:0]),
-      .col   (boris_col_wide[4:0]),
+      .row   (boris_row_wide[4:0]),
+      .col   (boris_col_wide[3:0]),
       .colour(boris_colour)
   );
 

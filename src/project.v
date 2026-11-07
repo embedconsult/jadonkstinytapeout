@@ -62,11 +62,10 @@ module tt_um_jadonk_boris_minsky (
       .rgb       (scene_rgb)
   );
 
-  // Register the colour so it lines up with the (registered) sync signals.
-  reg [5:0] rgb;
-  always @(posedge clk) rgb <= scene_rgb;
-
-  wire [5:0] pixel = video_on ? rgb : 6'b0;   // black outside the visible area
+  // The colour is not registered (that would cost six flip-flops): it is one
+  // clock ahead of the sync signals, which only moves the picture one
+  // monitor pixel to the left.
+  wire [5:0] pixel = video_on ? scene_rgb : 6'b0;   // black outside the visible area
   wire [1:0] red   = pixel[5:4];
   wire [1:0] green = pixel[3:2];
   wire [1:0] blue  = pixel[1:0];

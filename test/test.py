@@ -92,9 +92,9 @@ async def test_picture(dut):
         (156, 198, (0, 2, 3), "box b lost a pebble: line 0 was 'take b'"),
         (76, 215, (2, 3, 1), "box a still has its pebbles"),
         (82, 244, (3, 3, 3), "white label under box a"),
-        (64, 304, (0, 0, 0), "Boris' black outline"),
-        (116, 360, (3, 1, 0), "Boris' orange tongue"),
-        (56, 380, (3, 3, 3), "Boris' white fur"),
+        (71, 288, (0, 0, 0), "Boris' black outline"),
+        (135, 352, (3, 1, 0), "Boris' orange tongue"),
+        (79, 400, (3, 3, 3), "Boris' white fur"),
         (600, 470, (0, 2, 3), "BeagleBoard blue background"),
     ]
     for x, y, rgb, what in sorted(expected, key=lambda p: (p[1], p[0])):
