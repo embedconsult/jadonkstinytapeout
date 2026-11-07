@@ -22,13 +22,17 @@ module tb ();
   wire [7:0] uo_out;
   wire [7:0] uio_out;
   wire [7:0] uio_oe;
+
+  // Sync signals on their own, so tests can wait for their edges:
+  wire hsync_n = uo_out[7];
+  wire vsync_n = uo_out[3];
 `ifdef GL_TEST
   wire VPWR = 1'b1;
   wire VGND = 1'b0;
 `endif
 
   // The design under test:
-  tt_um_jadonk_beagle_clock user_project (
+  tt_um_jadonk_boris_minsky user_project (
 
       // Include power ports for the Gate Level test:
 `ifdef GL_TEST

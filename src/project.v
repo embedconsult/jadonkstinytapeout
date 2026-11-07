@@ -1,26 +1,21 @@
 /*
- * Beagle clock: the Tiny Tapeout workshop design, written out in Verilog.
+ * Boris and the Minsky Machine
  *
- * The design has two independent parts:
+ * A two-instruction computer (Minsky's ADD and TAKE) draws a VGA picture
+ * of Boris, the BeagleBoard.org beagle, together with a live demonstration
+ * of Minsky's "boxes of pebbles".
  *
- *   1. A clock divider: one D flip-flop with an inverter from its output
- *      back to its D input. Every rising clock edge it loads the opposite
- *      of what it holds, so it toggles, giving a clock at half the input
- *      frequency. It drives segment A of the 7-segment display.
+ *   minsky_vga.v     the ADD/TAKE machine; its main program generates the VGA timing
+ *   demo_program.v   the second program it runs, slowly, for you to watch: multiplication
+ *   scene.v          what colour each pixel is
+ *   boris.v          Boris as ASCII art
+ *   font.v           a small font as ASCII art
  *
- *   2. A secret-code detector: when the input switches spell 0x62, the
- *      ASCII code for 'b', segments C, D, E, F and G light up to draw a
- *      lowercase "b" (for BeagleBoard).
+ * Output pins follow the Tiny VGA Pmod:
+ *   uo_out[0] R1   uo_out[1] G1   uo_out[2] B1   uo_out[3] VSYNC
+ *   uo_out[4] R0   uo_out[5] G0   uo_out[6] B0   uo_out[7] HSYNC
  *
- * The 7-segment display on the Tiny Tapeout demo board is wired as:
- *   uo_out[0] = A   uo_out[1] = B   uo_out[2] = C   uo_out[3] = D
- *   uo_out[4] = E   uo_out[5] = F   uo_out[6] = G   uo_out[7] = decimal point
- *
- *         A
- *       F   B
- *         G
- *       E   C
- *         D
+ * Clock: 25.175 MHz (640 x 480 at 60 Hz). 25 MHz also works on most monitors.
  *
  * Copyright (c) 2026 jadonk
  * SPDX-License-Identifier: Apache-2.0
@@ -28,9 +23,9 @@
 
 `default_nettype none
 
-module tt_um_jadonk_beagle_clock (
-    input  wire [7:0] ui_in,    // Dedicated inputs: the 8 DIP switches
-    output wire [7:0] uo_out,   // Dedicated outputs: the 7-segment display
+module tt_um_jadonk_boris_minsky (
+    input  wire [7:0] ui_in,    // Dedicated inputs (unused)
+    output wire [7:0] uo_out,   // Dedicated outputs: Tiny VGA Pmod
     input  wire [7:0] uio_in,   // IOs: Input path (unused)
     output wire [7:0] uio_out,  // IOs: Output path (unused)
     output wire [7:0] uio_oe,   // IOs: Enable path (unused, all inputs)
@@ -39,38 +34,48 @@ module tt_um_jadonk_beagle_clock (
     input  wire       rst_n     // reset_n - low to reset
 );
 
-  // ---------------------------------------------------------------------
-  // 1. Clock divider: a D flip-flop with an inverter fed back into D.
-  // ---------------------------------------------------------------------
-  reg  half_clock;                  // the flip-flop's output, Q
-  wire next_half_clock = ~half_clock; // the inverter: D = not Q
+  wire       hsync_n, vsync_n, video_on;
+  wire [8:0] x, y, frame;
+  wire [3:0] demo_line;
+  wire [19:0] demo_boxes;
 
-  always @(posedge clk) begin
-    if (!rst_n)
-      half_clock <= 1'b0;           // start from a known state after reset
-    else
-      half_clock <= next_half_clock;
-  end
+  minsky_vga machine (
+      .clk     (clk),
+      .rst_n   (rst_n),
+      .hsync_n (hsync_n),
+      .vsync_n (vsync_n),
+      .video_on(video_on),
+      .x       (x),
+      .y       (y),
+      .frame   (frame),
+      .demo_line (demo_line),
+      .demo_boxes(demo_boxes)
+  );
 
-  // ---------------------------------------------------------------------
-  // 2. Secret-code detector: show a lowercase "b" when ui_in == 'b'.
-  // ---------------------------------------------------------------------
-  localparam [7:0] SECRET_CODE = 8'h62;   // ASCII 'b'
+  wire [5:0] scene_rgb;
 
-  wire code_matches = (ui_in == SECRET_CODE);
+  scene picture (
+      .x    (x),
+      .y    (y),
+      .demo_line (demo_line),
+      .demo_boxes(demo_boxes),
+      .rgb       (scene_rgb)
+  );
 
-  // ---------------------------------------------------------------------
-  // Outputs. All output pins must be assigned.
-  // ---------------------------------------------------------------------
-  assign uo_out[0]   = half_clock;             // segment A blinks at clk / 2
-  assign uo_out[1]   = 1'b0;                   // segment B is not part of "b"
-  assign uo_out[6:2] = {5{code_matches}};      // segments C, D, E, F, G draw "b"
-  assign uo_out[7]   = 1'b0;                   // decimal point off
+  // Register the colour so it lines up with the (registered) sync signals.
+  reg [5:0] rgb;
+  always @(posedge clk) rgb <= scene_rgb;
 
+  wire [5:0] pixel = video_on ? rgb : 6'b0;   // black outside the visible area
+  wire [1:0] red   = pixel[5:4];
+  wire [1:0] green = pixel[3:2];
+  wire [1:0] blue  = pixel[1:0];
+
+  assign uo_out  = {hsync_n, blue[0], green[0], red[0], vsync_n, blue[1], green[1], red[1]};
   assign uio_out = 8'b0;
   assign uio_oe  = 8'b0;
 
   // List all unused inputs to prevent warnings
-  wire _unused = &{ena, uio_in, 1'b0};
+  wire _unused = &{ena, ui_in, uio_in, frame, 1'b0};
 
 endmodule
