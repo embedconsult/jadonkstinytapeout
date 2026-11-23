@@ -82,7 +82,7 @@ What you'll see (cut with ...):
     wrote frame_1.ppm
     PASS: sync timing and black blanking correct for 2 frames
 
-## 4 The whole chip, at its real pace
+## 4 The whole chip, at its real pace ([3f225c04](https://ollama.openbeagle.org/tt-minsky-vga/info/3f225c046f8b6365207f35edd572c37a58a3e0cc997547b9c710cc691ba36b36?diff=1))
 
 Entry 1 ran the machine on its own. Here the whole chip runs from reset,
 with the VGA scan pacing the machine as it does on silicon: one instruction
@@ -108,3 +108,26 @@ What you'll see (cut with ...):
        99   1568   490      0  ->   0   3  4  0  0  0
     PASS: 99 instructions, one every 16 frames, each at the start of vsync
     SAME: the chip's 99 instructions match program_trace.txt
+
+## 5 A font vga-playground.com can simulate
+
+vga-playground.com runs a design in the browser: an old Verilator, built
+for WebAssembly, turns the Verilog into a tree, and a small simulator runs
+that tree. It stopped with "non-const expr in initarray (multidimensional
+arrays not supported)". Verilator had made the font's `case` into a lookup
+table whose entries were whole glyphs, 8 rows of 6 characters, 384 bits
+each, and the playground's simulator can't hold entries that wide.
+`src/font.v` now looks up one row at a time: a letter and a row give six
+bits. The glyphs are still drawn in `#` and `.`, now top to bottom, one
+row per line. A check of all 2,048 (letter, row, column) inputs found the
+old and new fonts identical, and frame 1 renders byte for byte the same.
+`test/vga-playground/minsky.spec.ts` compiles and renders the design with
+the playground's own code; it failed with the old font and passes with
+this one. Run its header's three steps in a clone of
+https://github.com/TinyTapeout/vga-playground.
+
+What you'll see:
+
+     ✓ src/sim/minsky.spec.ts (1 test)
+       ✓ Minsky Machine compiles and renders in vga-playground
+          Tests  1 passed (1)
