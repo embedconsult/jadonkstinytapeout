@@ -9,7 +9,7 @@ To follow along you need Icarus Verilog and Python with cocotb, exactly as
 GitHub's `test` action installs them: on Ubuntu, `sudo apt install iverilog`
 then `pip install -r test/requirements.txt`. All commands run in `test/`.
 
-## 1 The program, one instruction at a time
+## 1 The program, one instruction at a time ([98aea7f2](https://ollama.openbeagle.org/tt-minsky-vga/info/98aea7f2608675f36fc1f9927bcc907f873932a87fc632d3e2dda1085c823fcd?diff=1))
 
 The chip's counting machine (a *Minsky machine*: boxes of pebbles and two
 instructions, `add` and `take`) runs a fixed program that multiplies a = 3
@@ -37,3 +37,23 @@ What you'll see (cut with ...):
             after 99 instructions: back to the start (line 0, a = 3, b = 4)
     ...
     PASS: 3 x 4 = 12 at instruction 77; the program repeats every 99 instructions
+
+## 2 The pins match the Tiny VGA Pmod
+
+A *Pmod* is a small plug-in board; the Tiny VGA Pmod carries the chip's
+eight output pins to a VGA socket. If the chip put a signal on the wrong
+pin, the picture would need rewiring. Tiny VGA's README
+(https://github.com/mole99/tiny-vga) and Tiny Tapeout's pinout page
+(https://tinytapeout.com/specs/pinouts/) both give uo_out[0..7] as R1, G1,
+B1, VSYNC, R0, G0, B0, HSYNC, where R1/G1/B1 are each colour's high bit.
+`info.yaml` lists the same names, and `src/project.v` drives them in that
+order, with each colour's high bit on R1/G1/B1. The cocotb tests read the
+pins the same way, so their passing pictures also check the wiring. Run
+`grep -n 'uo\[' ../info.yaml`, then `grep -n 'assign uo_out' ../src/project.v`.
+
+What you'll see:
+
+    41:  uo[0]: "R1"
+    ...
+    48:  uo[7]: "HSYNC"
+    103:  assign uo_out  = {hsync_n, blue[0], green[0], red[0], vsync_n, blue[1], green[1], red[1]};
