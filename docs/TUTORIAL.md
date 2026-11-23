@@ -57,3 +57,27 @@ What you'll see:
     ...
     48:  uo[7]: "HSYNC"
     103:  assign uo_out  = {hsync_n, blue[0], green[0], red[0], vsync_n, blue[1], green[1], red[1]};
+
+## 3 Colour and sync line up (branch vga-timing-fix)
+
+A VGA monitor finds the start of each line from the *hsync* pulse, then
+expects 48 clocks of black (the *back porch*) before the 640 picture
+pixels. Here the colour came straight from the beam position, while the
+sync was registered and so came one clock late. The picture therefore sat
+one pixel early: one picture pixel in each back porch, and column 639
+black. Nobody would see it on a monitor, but it is not standard timing. The
+new cocotb test `test_picture_lines_up_with_sync` measures from the end of
+hsync and failed at clock 47. The fix registers the sync for the position
+the counters move to next, so sync and colour describe the same pixel. It
+adds no flip-flops. `render_frame.v` now also checks that every blanking
+clock is black, and `docs/minsky_machine.png` is the new frame 1, which is
+the old one moved right by one pixel. Run `make`, then
+`iverilog -g2012 -o render.vvp render_frame.v ../src/[a-z]*.v && vvp render.vvp +frames=1 && python3 ppm_to_png.py frame_1.ppm frame_1.png`.
+
+What you'll see (cut with ...):
+
+    ** test.test_picture_lines_up_with_sync   PASS ...
+    ** TESTS=4 PASS=4 FAIL=0 SKIP=0 ...
+    ...
+    wrote frame_1.ppm
+    PASS: sync timing and black blanking correct for 2 frames

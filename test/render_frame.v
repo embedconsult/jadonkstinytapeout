@@ -6,7 +6,8 @@
  *
  * Writes frame_<n>.ppm for each frame listed (frames counted from reset).
  * The picture is 640 x 480; each colour channel is 2 bits, scaled to 0..255.
- * It also checks the sync timing and stops with an error if it is wrong.
+ * It also checks the sync timing, and that the colour is black outside the
+ * picture, and stops with an error if either is wrong.
  */
 
 `default_nettype none
@@ -56,7 +57,7 @@ module render_frame;
 
     repeat (4) @(posedge clk);
     rst_n = 1;
-    @(posedge clk);   // outputs are registered: the picture starts one clock after reset
+    // Sync and colour both belong to the beam position, which starts at 0 now.
 
     for (frame = 0; frame <= last_frame; frame = frame + 1) begin
       fd = 0;
@@ -78,6 +79,11 @@ module render_frame;
             if (errors < 5) $display("vsync wrong: frame %0d line %0d clock %0d", frame, line, col);
             errors = errors + 1;
           end
+          // Outside the 640 x 480 picture the colour must be black.
+          if ((line >= 480 || col >= 640) && {red, green, blue} !== 6'b0) begin
+            if (errors < 5) $display("colour in blanking: frame %0d line %0d clock %0d", frame, line, col);
+            errors = errors + 1;
+          end
           if (fd != 0 && line < 480 && col < 640)
             $fwrite(fd, "%0d %0d %0d\n", red, green, blue);
           @(posedge clk);
@@ -92,7 +98,7 @@ module render_frame;
       $display("FAIL: %0d timing errors", errors);
       $fatal(1);
     end
-    $display("PASS: sync timing correct for %0d frames", last_frame + 1);
+    $display("PASS: sync timing and black blanking correct for %0d frames", last_frame + 1);
     $finish;
   end
 
