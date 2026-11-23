@@ -8,8 +8,12 @@
  *   clocks     0..639    640..655      656..751  752..799   800
  *   lines      0..479    480..489      490..491  492..524   525
  *
- * The sync outputs are registered (they appear one clock after the
- * position they belong to), and both are active low.
+ * The sync outputs are registered, and both are active low. Each is
+ * computed from the position the counters move to on the same clock edge,
+ * so it always belongs to the current hpos and vpos, like the colour the
+ * top level makes from them. (Computed from the current position instead,
+ * it would come one clock late, and the picture would sit one pixel early:
+ * a picture pixel in the back porch, and column 639 black.)
  */
 
 `default_nettype none
@@ -30,20 +34,23 @@ module vga_sync (
   wire end_of_line  = (hpos == H_TOTAL - 1);
   wire end_of_frame = (vpos == V_TOTAL - 1);
 
+  // Where the beam is on the next clock.
+  wire [9:0] next_h = end_of_line ? 10'd0 : hpos + 10'd1;
+  wire [9:0] next_v = !end_of_line ? vpos : end_of_frame ? 10'd0 : vpos + 10'd1;
+
   always @(posedge clk) begin
     if (!rst_n) begin
       hpos <= 10'd0;
       vpos <= 10'd0;
     end else begin
-      hpos <= end_of_line ? 10'd0 : hpos + 10'd1;
-      if (end_of_line)
-        vpos <= end_of_frame ? 10'd0 : vpos + 10'd1;
+      hpos <= next_h;
+      vpos <= next_v;
     end
   end
 
   always @(posedge clk) begin
-    hsync_n <= !(hpos >= H_SYNC_START && hpos < H_SYNC_END);
-    vsync_n <= !(vpos >= V_SYNC_START && vpos < V_SYNC_END);
+    hsync_n <= !(next_h >= H_SYNC_START && next_h < H_SYNC_END);
+    vsync_n <= !(next_v >= V_SYNC_START && next_v < V_SYNC_END);
   end
 
   assign visible = (hpos < H_VISIBLE) && (vpos < V_VISIBLE);

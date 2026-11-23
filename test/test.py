@@ -93,7 +93,7 @@ async def test_picture(dut):
         (76, 215, (2, 3, 1), "box a still has its pebbles"),
         (82, 244, (3, 3, 3), "white label under box a"),
         (96, 352, (2, 1, 0), "'bbb.io' in hair brown"),
-        (307, 352, (3, 1, 0), "'/minsky' in tongue orange"),
+        (308, 352, (3, 1, 0), "'/minsky' in tongue orange"),
         (600, 470, (0, 2, 3), "BeagleBoard blue background"),
     ]
     for x, y, rgb, what in sorted(expected, key=lambda p: (p[1], p[0])):
@@ -106,3 +106,27 @@ async def test_picture(dut):
     # Outside the visible area the colour pins must be black.
     await Timer((frame_start + 470 * LINE_CLOCKS + 700 - elapsed) * CLOCK_NS, unit="ns")
     assert colour(dut) == (0, 0, 0), "colour during horizontal blanking"
+
+
+@cocotb.test()
+async def test_picture_lines_up_with_sync(dut):
+    """The 640 visible pixels of a line sit exactly between the porches.
+
+    Measured from the end of the hsync pulse: 48 clocks of back porch, all
+    black; then 640 picture clocks, the first and last of which show the
+    blue background; then black again for the front porch.
+    """
+    await start(dut)
+    await Timer(100 * LINE_CLOCKS * CLOCK_NS, unit="ns")   # into the visible lines
+    await RisingEdge(dut.hsync_n)                          # back porch starts
+    await Timer(CLOCK_NS // 2, unit="ns")                  # middle of its first clock
+    seen = {}
+    for k in range(48 + 640 + 1):
+        if k < 48 or k in (48, 48 + 639, 48 + 640):
+            seen[k] = colour(dut)
+        await Timer(CLOCK_NS, unit="ns")
+    porch = {k: c for k, c in seen.items() if k < 48 and c != (0, 0, 0)}
+    assert not porch, f"colour during the back porch, at clocks {sorted(porch)}: {porch}"
+    assert seen[48] != (0, 0, 0), "first visible pixel is black"
+    assert seen[48 + 639] != (0, 0, 0), "last visible pixel (x = 639) is black"
+    assert seen[48 + 640] == (0, 0, 0), "colour after the last visible pixel"
