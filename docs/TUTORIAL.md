@@ -38,7 +38,7 @@ What you'll see (cut with ...):
     ...
     PASS: 3 x 4 = 12 at instruction 77; the program repeats every 99 instructions
 
-## 2 The pins match the Tiny VGA Pmod
+## 2 The pins match the Tiny VGA Pmod ([44e861b2](https://ollama.openbeagle.org/tt-minsky-vga/info/44e861b2e0f299d73e00d54190ae5b88444417b85eb02948e5d8cad748367b36?diff=1))
 
 A *Pmod* is a small plug-in board; the Tiny VGA Pmod carries the chip's
 eight output pins to a VGA socket. If the chip put a signal on the wrong
@@ -58,7 +58,7 @@ What you'll see:
     48:  uo[7]: "HSYNC"
     103:  assign uo_out  = {hsync_n, blue[0], green[0], red[0], vsync_n, blue[1], green[1], red[1]};
 
-## 3 Colour and sync line up (branch vga-timing-fix)
+## 3 Colour and sync line up ([6c56d3a1](https://ollama.openbeagle.org/tt-minsky-vga/info/6c56d3a1414995e4cea693d010a7377890a046f1?diff=1), branch vga-timing-fix)
 
 A VGA monitor finds the start of each line from the *hsync* pulse, then
 expects 48 clocks of black (the *back porch*) before the 640 picture
@@ -81,3 +81,30 @@ What you'll see (cut with ...):
     ...
     wrote frame_1.ppm
     PASS: sync timing and black blanking correct for 2 frames
+
+## 4 The whole chip, at its real pace
+
+Entry 1 ran the machine on its own. Here the whole chip runs from reset,
+with the VGA scan pacing the machine as it does on silicon: one instruction
+every 16 frames, at the start of vertical sync (line 490, clock 0). That
+is 1,584 frames for one pass of the program, about 26 seconds on the chip
+and about an hour in Icarus. `chip_trace.v` notes the frame, line and
+clock of every change of state and fails if one comes at another time. The
+Makefile then checks that the states match `program_trace.txt`. The
+picture agrees: `docs/frame_1217.png`, rendered by `render_frame.v`, is the
+first frame after instruction 77 and shows c = 12. The same testbench runs
+on the gate-level netlist (`GATES=yes`), but a full pass there takes most
+of a day and was stopped. Run `make chip_trace INSTRUCTIONS=2` for a
+two-minute look, or `make chip_trace` for all 99.
+
+What you'll see (cut with ...):
+
+    instr  frame  line  clock  ->  line   a  b  c  d  e
+        0                             0   3  4  0  0  0   (after reset)
+        1      0   490      0  ->   1   3  3  0  0  0
+    ...
+       77   1216   490      0  ->   7   3  0 12  0  4
+    ...
+       99   1568   490      0  ->   0   3  4  0  0  0
+    PASS: 99 instructions, one every 16 frames, each at the start of vsync
+    SAME: the chip's 99 instructions match program_trace.txt
